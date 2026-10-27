@@ -7,7 +7,7 @@ Tools
   close_all_issues(confirm)    DESTRUCTIVE: disabled unless LAB_ALLOW_DESTRUCTIVE=1
 
 Env
-  LAB_REPO   owner/name of the lab repo        (required)
+  LAB_REPO   ghcp-user139/agentic-sdlc-lab        (required)
   LAB_TOKEN  fine-grained PAT, issues: read    (optional for public repos)
   LAB_API    API base URL (default https://api.github.com; use http://127.0.0.1:8765 with scripts/mock_github.py)
 """
