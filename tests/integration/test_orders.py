@@ -1,3 +1,25 @@
+def test_cancel_delivered_order_is_rejected(client):
+    token = _login(client)
+    auth_headers = {"Authorization": f"Bearer {token}"}
+    created = client.post("/orders/", json={"item": "delivered_order"}, headers=auth_headers).json()
+    order_id = created["id"]
+
+    for next_status in ["processing", "fulfilled", "shipped", "delivered"]:
+        response = client.put(
+            f"/orders/{order_id}",
+            json={"status": next_status},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+
+    response = client.post(f"/orders/{order_id}/cancel", headers=auth_headers)
+    assert response.status_code == 400
+
+    get_response = client.get(f"/orders/{order_id}", headers=auth_headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["status"] == "delivered"
+
+
 def _login(client):
     """Register a user and login to get a bearer token."""
     client.post("/users/register", json={
@@ -50,6 +72,34 @@ def test_list_orders(client):
     })
     assert response.status_code == 200
     assert len(response.json()["items"]) == 2
+
+
+def test_list_orders_filters_by_status(client):
+    token = _login(client)
+    auth_headers = {"Authorization": f"Bearer {token}"}
+    shipped_order = client.post(
+        "/orders/",
+        json={"item": "shipped_item"},
+        headers=auth_headers,
+    ).json()
+    client.post("/orders/", json={"item": "received_item"}, headers=auth_headers)
+
+    for next_status in ["processing", "fulfilled", "shipped"]:
+        response = client.put(
+            f"/orders/{shipped_order['id']}",
+            json={"status": next_status},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+
+    response = client.get("/orders/?status=shipped", headers=auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert len(data["items"]) == 1
+    assert data["items"][0]["id"] == shipped_order["id"]
+    assert data["items"][0]["status"] == "shipped"
 
 
 def test_update_order_status(client):

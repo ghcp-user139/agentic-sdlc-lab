@@ -97,6 +97,8 @@ def cancel_order(
         raise HTTPException(status_code=404, detail="Order not found")
     except OrderOwnershipError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except InvalidOrderTransition as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return order
 
 
