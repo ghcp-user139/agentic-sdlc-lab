@@ -136,6 +136,33 @@ def test_pay_invoice_not_found(client):
     assert response.status_code == 404
 
 
+def test_refund_paid_invoice_cancels_order(client):
+    token = _login(client)
+    auth_headers = {"Authorization": f"Bearer {token}"}
+
+    order_resp = client.post(
+        "/orders/", json={"item": "refundable"}, headers=auth_headers
+    )
+    order_id = order_resp.json()["id"]
+    client.post(
+        "/payment/generate",
+        json={"order_id": order_id},
+        headers=auth_headers,
+    )
+    client.post(f"/payment/pay/{order_id}", headers=auth_headers)
+
+    refund_resp = client.post(
+        f"/payment/refund/{order_id}", headers=auth_headers
+    )
+
+    assert refund_resp.status_code == 200
+    assert refund_resp.json()["order_id"] == order_id
+    assert refund_resp.json()["status"] == "cancelled"
+    order_get = client.get(f"/orders/{order_id}", headers=auth_headers)
+    assert order_get.status_code == 200
+    assert order_get.json()["status"] == "cancelled"
+
+
 def test_get_invoice_by_id(client):
     token = _login(client)
 
