@@ -156,6 +156,10 @@ def test_fsm_unknown_target_status():
         OrderStateMachine.validate_transition(models.OrderStatus.RECEIVED, "unknown")
 
 
+def test_delivered_is_terminal():
+    assert OrderStateMachine.TRANSITIONS[models.OrderStatus.DELIVERED] == []
+
+
 # ── Service Layer FSM Integration Tests ─────────────────────────────────────
 
 
