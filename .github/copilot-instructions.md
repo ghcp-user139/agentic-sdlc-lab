@@ -2,7 +2,7 @@
 
 ## Commands
 - Run unit tests with `make test-unit`; they do not require Docker.
-- Set `AUTH_JWT_SECRET_KEY` before running tests (PowerShell: `$env:AUTH_JWT_SECRET_KEY = "<local-test-secret>"`).
+
 
 ## Architecture rules
 - Keep routes thin; put business logic in services and data access in repositories.

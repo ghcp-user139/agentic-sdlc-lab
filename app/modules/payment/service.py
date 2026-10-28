@@ -134,3 +134,41 @@ def cancel_invoice_by_order_id(invoice_repo: repository.InvoiceRepository, order
     if invoice.status == payment_models.InvoiceStatus.PAID:
         raise PaymentError("Cannot cancel a paid invoice")
     return invoice_repo.update_invoice(invoice.id, status=payment_models.InvoiceStatus.CANCELLED)
+
+
+def refund_invoice(
+    db: Session,
+    invoice_repo: repository.InvoiceRepository,
+    order_repo: order_repo.OrderRepository,
+    order_id: int,
+):
+    """Refund a paid invoice and cancel its order in one transaction."""
+    invoice = invoice_repo.get_invoice_by_order_id(order_id)
+    if not invoice:
+        raise InvoiceNotFoundError(f"No invoice found for order {order_id}")
+
+    if invoice.status != payment_models.InvoiceStatus.PAID:
+        raise PaymentError("Only paid invoices can be refunded")
+
+    order = order_repo.get_order(order_id)
+    if not order:
+        raise OrderNotFoundError()
+
+    order_service.OrderStateMachine.validate_transition(
+        order.status, order_models.OrderStatus.CANCELLED
+    )
+
+    try:
+        invoice_repo.update_invoice(
+            invoice.id, status=payment_models.InvoiceStatus.CANCELLED
+        )
+        invoice.status = payment_models.InvoiceStatus.CANCELLED
+        order.status = order_models.OrderStatus.CANCELLED
+        db.commit()
+        db.refresh(invoice)
+        db.refresh(order)
+    except Exception:
+        db.rollback()
+        raise
+
+    return invoice
