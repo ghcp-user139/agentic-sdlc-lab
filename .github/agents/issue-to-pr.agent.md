@@ -9,3 +9,9 @@ tools: [read, edit, search, execute, lab-issues/get_issue]
 4. Run `python -m pytest tests/unit -q` after every step.
 5. Never edit `alembic/`, `.github/`, `pyproject.toml`, Docker Compose files, or `AGENTS.md`; stop and ask if the task requires it.
 6. Open a draft PR that links the issue and lists what was not done.
+
+## State protocol
+- First action: read docs/agent-state/<issue>.md. Verify it against `git log --oneline -5` and the unit tests before continuing. If the file and the branch disagree, the branch wins: fix the file.
+- After every step: tick it, update last_commit and heartbeat, run the unit tests, then commit with the message "step N: ...".
+- Never record secrets, tokens or pasted source code in the state file.
+- If you cannot continue, set status: blocked and write the question under Open questions.
