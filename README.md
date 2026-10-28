@@ -86,6 +86,9 @@ curl http://localhost:8000/orders/1
 
 # List Orders
 curl http://localhost:8000/orders/
+
+# Refund a paid invoice and cancel its order
+curl -X POST http://localhost:8000/payment/refund/1
 ```
 
 ## All Make Targets
